@@ -1,69 +1,37 @@
 import streamlit as st
-import random
+import google.generativeai as genai
 
 # Page config
-st.set_page_config(page_title="Virtual Listening Ear", page_icon="🛋️")
+st.set_page_config(page_title="AI Virtual Counselor", page_icon="🛋️")
 
-import re
+st.title("AI Virtual Counselor 🛋️")
+st.write("A safe, intelligent space to share your thoughts. Powered by Google Gemini.")
 
-def contains_keywords(text, keywords):
-    for word in keywords:
-        if re.search(r'\b' + re.escape(word) + r'\b', text):
-            return True
-    return False
+# Sidebar for API Key
+st.sidebar.header("Configuration")
+api_key = st.sidebar.text_input("Enter your Google Gemini API Key:", type="password")
+st.sidebar.markdown("[Get a free Gemini API key here](https://aistudio.google.com/app/apikey)")
 
-def get_response(user_input):
-    user_input = user_input.lower()
-    
-    # Simple rule-based keyword matching using whole words
-    if contains_keywords(user_input, ["hello", "hi", "hey"]):
-        return random.choice(["Hello there. How are you feeling today?", "Hi. What's on your mind?"])
-        
-    elif contains_keywords(user_input, ["sad", "depressed", "unhappy", "down", "terrible", "cry", "hurt", "hurted", "fight"]):
-        return random.choice([
-            "I'm really sorry you're feeling this way. Do you want to talk more about what's making you feel sad?", 
-            "It sounds like you're going through a tough time. I'm here to listen."
-        ])
-        
-    elif contains_keywords(user_input, ["anxious", "nervous", "stress", "stressed", "panic", "overwhelmed"]):
-        return random.choice([
-            "Take a deep breath. Stress can be really overwhelming. What's causing you to feel this way?", 
-            "Anxiety is tough to deal with. Try to focus on the present moment. Want to talk about what's stressing you?"
-        ])
-        
-    elif contains_keywords(user_input, ["lonely", "alone", "isolated"]):
-        return "Feeling lonely is really hard. Please know that I'm here chatting with you right now. Do you have anyone you can reach out to?"
-        
-    elif contains_keywords(user_input, ["angry", "mad", "frustrated", "annoyed"]):
-        return "It's normal to feel frustrated when things don't go right. Do you want to vent about it?"
-        
-    elif contains_keywords(user_input, ["happy", "good", "great", "better", "fine", "love", "luv"]):
-        return "That sounds like a really strong emotion! It's important to process these feelings."
-        
-    elif contains_keywords(user_input, ["thank", "thanks"]):
-        return "You're welcome. I'm always here to listen."
-        
-    elif contains_keywords(user_input, ["bye", "goodbye"]):
-        return "Take care of yourself. Goodbye for now."
-        
-    else:
-        # Fallback responses if no keywords match
-        return random.choice([
-            "Tell me more about that.",
-            "How does that make you feel?",
-            "I'm listening.",
-            "That sounds difficult. Can you elaborate?",
-            "I see. Go on."
-        ])
+if not api_key:
+    st.warning("Please enter your Gemini API Key in the sidebar to start chatting.")
+    st.stop()
 
-st.title("Virtual Listening Ear 🛋️")
-st.write("A safe space to share your thoughts. I'm just a simple bot, but I'm here to listen.")
+# Configure the generative AI model
+genai.configure(api_key=api_key)
 
-# Set up the chat history
-if "messages" not in st.session_state:
+# Initialize the chat session in session state
+if "chat_session" not in st.session_state:
+    # Use gemini-1.5-flash which is fast and great for general text
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        system_instruction="You are a compassionate, empathetic, and professional virtual counselor. Listen to the user's problems, validate their feelings, and offer thoughtful, gentle advice without being overly clinical. Keep your responses conversational, concise, and focused on helping the user process their emotions."
+    )
+    st.session_state.chat_session = model.start_chat(history=[])
     st.session_state.messages = []
-    # Start with a greeting
-    st.session_state.messages.append({"role": "assistant", "content": "Hi there. How are you feeling today?"})
+    
+    # Add a welcoming message
+    greeting = "Hi there. I'm here to listen and help. How are you feeling today?"
+    st.session_state.messages.append({"role": "assistant", "content": greeting})
 
 # Draw the past messages
 for message in st.session_state.messages:
@@ -78,9 +46,15 @@ if prompt:
     st.chat_message("user").markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # Get and show bot response
-    response = get_response(prompt)
-    with st.chat_message("assistant"):
-        st.markdown(response)
-        
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    # Get bot response
+    try:
+        with st.spinner("Thinking..."):
+            response = st.session_state.chat_session.send_message(prompt)
+            assistant_response = response.text
+            
+            with st.chat_message("assistant"):
+                st.markdown(assistant_response)
+                
+            st.session_state.messages.append({"role": "assistant", "content": assistant_response})
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
