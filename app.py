@@ -23,7 +23,7 @@ genai.configure(api_key=api_key)
 if "chat_session" not in st.session_state:
     # Use gemini-1.5-flash which is fast and great for general text
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash-latest",
+        model_name="gemini-2.5-flash",
         system_instruction="You are a compassionate, empathetic, and professional virtual counselor. Listen to the user's problems, validate their feelings, and offer thoughtful, gentle advice without being overly clinical. Keep your responses conversational, concise, and focused on helping the user process their emotions."
     )
     st.session_state.chat_session = model.start_chat(history=[])
