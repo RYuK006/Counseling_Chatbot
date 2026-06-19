@@ -4,38 +4,46 @@ import random
 # Page config
 st.set_page_config(page_title="Virtual Listening Ear", page_icon="🛋️")
 
+import re
+
+def contains_keywords(text, keywords):
+    for word in keywords:
+        if re.search(r'\b' + re.escape(word) + r'\b', text):
+            return True
+    return False
+
 def get_response(user_input):
     user_input = user_input.lower()
     
-    # Simple rule-based keyword matching
-    if any(word in user_input for word in ["hello", "hi", "hey"]):
+    # Simple rule-based keyword matching using whole words
+    if contains_keywords(user_input, ["hello", "hi", "hey"]):
         return random.choice(["Hello there. How are you feeling today?", "Hi. What's on your mind?"])
         
-    elif any(word in user_input for word in ["sad", "depressed", "unhappy", "down", "terrible"]):
+    elif contains_keywords(user_input, ["sad", "depressed", "unhappy", "down", "terrible", "cry", "hurt", "hurted", "fight"]):
         return random.choice([
             "I'm really sorry you're feeling this way. Do you want to talk more about what's making you feel sad?", 
-            "It's completely okay to feel down sometimes. I'm here to listen."
+            "It sounds like you're going through a tough time. I'm here to listen."
         ])
         
-    elif any(word in user_input for word in ["anxious", "nervous", "stress", "stressed", "panic"]):
+    elif contains_keywords(user_input, ["anxious", "nervous", "stress", "stressed", "panic", "overwhelmed"]):
         return random.choice([
             "Take a deep breath. Stress can be really overwhelming. What's causing you to feel this way?", 
             "Anxiety is tough to deal with. Try to focus on the present moment. Want to talk about what's stressing you?"
         ])
         
-    elif any(word in user_input for word in ["lonely", "alone", "isolated"]):
+    elif contains_keywords(user_input, ["lonely", "alone", "isolated"]):
         return "Feeling lonely is really hard. Please know that I'm here chatting with you right now. Do you have anyone you can reach out to?"
         
-    elif any(word in user_input for word in ["angry", "mad", "frustrated", "annoyed"]):
+    elif contains_keywords(user_input, ["angry", "mad", "frustrated", "annoyed"]):
         return "It's normal to feel frustrated when things don't go right. Do you want to vent about it?"
         
-    elif any(word in user_input for word in ["happy", "good", "great", "better", "fine"]):
-        return "I'm so glad to hear that! It's important to appreciate the good days."
+    elif contains_keywords(user_input, ["happy", "good", "great", "better", "fine", "love", "luv"]):
+        return "That sounds like a really strong emotion! It's important to process these feelings."
         
-    elif "thank" in user_input:
+    elif contains_keywords(user_input, ["thank", "thanks"]):
         return "You're welcome. I'm always here to listen."
         
-    elif "bye" in user_input:
+    elif contains_keywords(user_input, ["bye", "goodbye"]):
         return "Take care of yourself. Goodbye for now."
         
     else:
